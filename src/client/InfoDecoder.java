@@ -59,9 +59,9 @@ public class InfoDecoder implements MessageDecoder {
         {
             return MessageDecoderResult.NEED_DATA;
         }
-		byte StartFlage1 = in.get();
-		byte StartFlage2 = in.get();
-        int bodyLength=in.getInt();
+		byte StartFlage1 = in.get();//包头1
+		byte StartFlage2 = in.get();//包头2
+        int bodyLength=in.getInt();//消息体长度
         
         System.out.println("结果："+(StartFlage1==(byte) 0xaa));
         System.out.println("结果："+(StartFlage2==(byte) 0xaa));
@@ -128,6 +128,7 @@ public class InfoDecoder implements MessageDecoder {
 		IoBuffer buffer = IoBuffer.allocate(dlength);
         buffer.put(packArr);
         buffer.flip();
+        System.out.println(buffer);
         out.write(buffer);
         
         return MessageDecoderResult.OK;

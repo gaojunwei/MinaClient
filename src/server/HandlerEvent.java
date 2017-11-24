@@ -42,19 +42,5 @@ public class HandlerEvent {
         String json = new String(bytes,"utf-8");
         System.out.println("服务器收到："+json);
         
-		Map<String,Object> map = (Map<String, Object>) JSON.parse(json);
-		String base64Str = map.get("data").toString();
-        
-        FileUitl.decoderBase64File(base64Str, "c:/cs/"+Thread.currentThread().getName()+(new Random().nextInt())+".bin");
-        
-    	//解析包头
-    	/*ImageRequest msgHead = new ImageRequest();
-    	msgHead.setBodyLength(buf.getInt());//包体长度
-    	
-
-        byte[] by = new byte[msgHead.getBodyLength()];
-        buf.get(by, 0, by.length);
-        String json = new String(by, "UTF-8").trim();
-        System.out.println("服务器收到："+json);*/
     }
 }

@@ -1,5 +1,7 @@
 package server;
 
+import java.util.Date;
+
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
@@ -12,28 +14,11 @@ public class ImageServerIoHandler extends IoHandlerAdapter {
 	@Override
 	public void messageReceived(IoSession session, Object message)
 			throws Exception {
-
-		IoBuffer buf = (IoBuffer) message;
-		HandlerEvent.getInstance().handle(buf);
-		
-		
-		String data = "OK";
-		AbsMessage msgHead = new AbsMessage(data);
-		
-        System.out.println("服务器返回消息长度："+(8+msgHead.getBodyLength()));
-        IoBuffer buffer = IoBuffer.allocate(8+msgHead.getBodyLength());
-        //把消息头put进去
-        buffer.put(msgHead.getStartFlage());
-        buffer.putInt(msgHead.getBodyLength());
-        buffer.put(msgHead.getBodyData());
-        buffer.put(msgHead.getEndFlage());
-        //把消息体put进去
-        buffer.flip();
-		session.write(buffer);
-		
+		System.out.println("*****>"+session.getAttribute("date"));
 	}
 	@Override
 	public void sessionCreated(IoSession session) throws Exception {
+		session.setAttribute("date",new Date().getTime());
 		System.out.println("sessionCreated:"+session.getId());
 	}
 	@Override

@@ -2,7 +2,9 @@ package client;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.mina.core.buffer.IoBuffer;
@@ -15,14 +17,19 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.SocketConnector;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
+
 import common.AbsMessage;
 import common.FileUitl;
 import common.MyCodecFactory;
 
 public class SocketClient extends IoHandlerAdapter {
-
+	
+	Logger logger = LoggerFactory.getLogger(SocketClient.class);
+	
 	public static final int CONNECT_TIMEOUT = 3000;
 
 	private String host;
@@ -31,10 +38,12 @@ public class SocketClient extends IoHandlerAdapter {
 	private IoSession session;
 
 	public SocketClient() {
-		this("127.0.0.1", 33789);
+		//this("111.202.58.60", 33789);
+		this("111.202.58.60", 9172);
 	}
 	
 	public static void main(String[] args) {
+		new SocketClient();
 		new SocketClient();
 	}
 
@@ -44,7 +53,7 @@ public class SocketClient extends IoHandlerAdapter {
 			this.port = port;
 			connector = new NioSocketConnector();
 			connector.getFilterChain().addLast("codec", 
-					new ProtocolCodecFilter(new MyCodecFactory(
+			 		new ProtocolCodecFilter(new MyCodecFactory(
 							new InfoDecoder(Charset.forName("utf-8")),
 							new InfoEncoder(Charset.forName("utf-8")))
 							));
@@ -54,35 +63,36 @@ public class SocketClient extends IoHandlerAdapter {
 			ConnectFuture connectFuture = connector.connect(new InetSocketAddress(this.host, this.port));
 			// 等待建立连接
 			connectFuture.awaitUninterruptibly();
-			System.out.println("连接成功");
+	
 			// 返回代表两端连接的一个对象,有读写方法以及获取本端网络设置的相关方法
 			this.session = connectFuture.getSession();
 			
+			if(session!=null&&session.isConnected())
+			{
+				System.out.println("链接成功");
+			}
 			
-			
-			Map<String,Object> map = new HashMap<String, Object>();
-			map.put("order", "call-over点名");
-			map.put("time", "2017-11-19 17:05:30");
-			map.put("data", FileUitl.encodeBase64File("c:/cs/02-3C-1-1.bin"));
-			
-			String data = JSON.toJSONString(map);
-	        IoBuffer buffer = getDatabuffer(data);
-	        session.write(buffer);
-	        
-	        
 	        Map<String,Object> maps = new HashMap<String, Object>();
-			maps.put("data", FileUitl.encodeBase64File("c:/cs/02-3C-1-1.bin"));
-			
+	        maps.put("order", "report_mac");
+	        maps.put("mac", "678yyss");
 			String datas = JSON.toJSONString(maps);
 			IoBuffer buffers = getDatabuffer(datas);
-	        WriteFuture wFuture = session.write(buffers);
-	        
+			
+			session.write(buffers);
+			
+			
+			session.closeOnFlush().awaitUninterruptibly();
+			
+	       /* IoBuffer buffers2 = getDatabuffer(datas);
+	        session.write(buffers2);
 	        
 	        wFuture.awaitUninterruptibly();
 	        if(wFuture.isWritten())
 	        {
-	        	CloseFuture cFuture = session.getCloseFuture().awaitUninterruptibly();
-	        }
+	        	System.out.println("信息发送成功");
+	        	session.closeNow();
+	        	//CloseFuture cFuture = session.getCloseFuture().awaitUninterruptibly();
+	        }*/
 		}finally{
 			if(connector!=null)
 			{
@@ -97,7 +107,7 @@ public class SocketClient extends IoHandlerAdapter {
 	 */
 	public IoBuffer getDatabuffer(String data)
 	{
-		AbsMessage msgHeads = new AbsMessage(data);
+		AbsMessage msgHeads = new   AbsMessage(data);
 		System.out.println("发生消息长度："+(8+msgHeads.getBodyLength()));
         //创建一个缓冲，缓冲大小为:消息头长度(8位)+消息体长度
         IoBuffer buffer = IoBuffer.allocate(8+msgHeads.getBodyLength());
@@ -117,7 +127,7 @@ public class SocketClient extends IoHandlerAdapter {
 		byte StartFlage2 = buf.get();
         int bodyLength=buf.getInt();
 		
-		System.out.println("服务器处理结果："+(StartFlage1==(byte) 0xaa));
+		System.out.println("服务器处理结果："+(StartFlage1==(byte) 0xaa));  
         System.out.println("服务器处理结果："+(StartFlage2==(byte) 0xaa));
         System.out.println("服务器处理消息体长度："+bodyLength);
     	
@@ -129,7 +139,7 @@ public class SocketClient extends IoHandlerAdapter {
         
         String json = new String(bytes,"utf-8");
         System.out.println("服务器返回："+json);
-        session.closeOnFlush();
+        //session.closeOnFlush();
 	}
 
 	@Override
