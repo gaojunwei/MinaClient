@@ -1,4 +1,4 @@
-package com.connection.codec;
+package com.connection.client;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
@@ -16,6 +16,9 @@ import org.apache.mina.transport.socket.SocketConnector;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 
 import com.alibaba.fastjson.JSON;
+import com.connection.codec.InfoDecoder;
+import com.connection.codec.InfoEncoder;
+import com.connection.codec.MyCodecFactory;
 import com.connection.message.AbsMessage;
 
 public class SocketClient extends IoHandlerAdapter {
@@ -32,7 +35,7 @@ public class SocketClient extends IoHandlerAdapter {
 
 	
 	public static void main(String[] args) {
-		new SocketClient("111.202.58.60", 9172,"ttt001");
+		new SocketClient("127.0.0.1", 8088,"54:13:79:A2:8F:0B");
 	}
 
 	public SocketClient(String host, int port,String mac) {
@@ -61,21 +64,21 @@ public class SocketClient extends IoHandlerAdapter {
 			}
 			logger.info("链接成功");
 			
+			//上报mac地址
 			Map<String,Object> map = new HashMap<String, Object>();
 	        map.put("order","report_mac");
-	        map.put("mac","mac001");
+	        map.put("mac",mac);
 			String data = JSON.toJSONString(map);
 			IoBuffer buffer = getDatabuffer(data);
-			System.out.println(buffer);
 			session.write(buffer);
-			
+			//每隔10秒发送一次
 			while(true)
 			{
 				Map<String,Object> ht = new HashMap<String, Object>();
 		        ht.put("order","h_t");
 				String htstr = JSON.toJSONString(ht);
 				IoBuffer htbuffer = getDatabuffer(htstr);
-				if(session.write(htbuffer).awaitUninterruptibly(5*1000))
+				if(session.write(htbuffer).awaitUninterruptibly(10*1000))
 				{
 					logger.info("发送心跳包 数据成功！");
 				}

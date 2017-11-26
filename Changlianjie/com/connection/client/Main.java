@@ -1,4 +1,4 @@
-package com.connection.codec;
+package com.connection.client;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

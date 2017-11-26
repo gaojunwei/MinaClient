@@ -1,4 +1,4 @@
-package com.connection.codec;
+package com.connection.client;
 
 public class Task implements Runnable {
 	
