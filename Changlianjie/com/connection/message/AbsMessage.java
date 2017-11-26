@@ -1,31 +1,29 @@
-package common;
+package com.connection.message;
 
 import java.nio.charset.Charset;
 
 public class AbsMessage {
 	/**
-     * Ğ­Òé¸ñÊ½£º°üÍ·:2 byte,³¤¶È:4 byte,JsonÊı¾İÇø:n byte,	°üÎ²:2 byte;
-     */
-	//ÏûÏ¢Í·2¸ö×Ö½Ú
-	private byte[] startFlage = new byte[2];
-	//°üÌåµÄ³¤¶È4¸ö×Ö½Ú
-	private int bodyLength = 0;
-	//ÏûÏ¢ÌåÄÚÈİ
-	byte[] bodyData = null;
-	//ÏûÏ¢½áÎ²2¸ö×Ö½Ú
-	private byte[] endFlage = new byte[2];
+	 * æ¶ˆæ¯åè®®æ ¼å¼ï¼šåŒ…å¤´:2 byte,é•¿åº¦:4 byte,Jsonæ•°æ®åŒº:n byte,åŒ…å°¾:2 byte;
+	 */
+	private byte[] startFlage = new byte[2];//æ¶ˆæ¯å¤´2ä¸ªå­—èŠ‚
+	private int bodyLength = 0;//åŒ…ä½“çš„é•¿åº¦4ä¸ªå­—èŠ‚
+	byte[] bodyData = null;//æ¶ˆæ¯ä½“å†…å®¹
+
+	private byte[] endFlage = new byte[2];//æ¶ˆæ¯ç»“å°¾2ä¸ªå­—èŠ‚
 
 	public AbsMessage(String data) {
-		//°üÍ·
+		//åŒ…å¤´
 		this.startFlage[0] = (byte) 0xaa;
 		this.startFlage[1] = (byte) 0xaa;
-		//ÏûÏ¢ÌåÄÚÈİ
+		//æ¶ˆæ¯ä½“å†…å®¹
 		this.bodyData = data.getBytes(Charset.forName("utf-8"));
-		//ÏûÏ¢Ìå³¤¶È
+		//æ¶ˆæ¯ä½“é•¿åº¦
 		this.bodyLength = this.bodyData.length;
-		//°üÎ²
-		this.endFlage[0] = (byte) 0x0a;//'\r'
-		this.endFlage[1] = (byte) 0x0d;//'\n'
+		//åŒ…å°¾
+		this.endFlage[0] = (byte) 0x0d;//'\r'
+		this.endFlage[1] = (byte) 0x0a;//'\n'
+
 	}
 
 	public byte[] getStartFlage() {

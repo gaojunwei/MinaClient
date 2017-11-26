@@ -1,9 +1,14 @@
-package common;
+package com.connection.codec;
 
 import org.apache.mina.filter.codec.demux.DemuxingProtocolCodecFactory;
 import org.apache.mina.filter.codec.demux.MessageDecoder;
 import org.apache.mina.filter.codec.demux.MessageEncoder;
 
+import com.connection.message.AbsMessage;
+
+/**
+ * 自定义编码工厂类
+ */
 public class MyCodecFactory extends DemuxingProtocolCodecFactory {
 
 	private MessageDecoder decoder;

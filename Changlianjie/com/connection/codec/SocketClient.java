@@ -1,53 +1,41 @@
-package client;
+package com.connection.codec;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.apache.mina.core.buffer.IoBuffer;
-import org.apache.mina.core.future.CloseFuture;
 import org.apache.mina.core.future.ConnectFuture;
-import org.apache.mina.core.future.WriteFuture;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.SocketConnector;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
-
-import common.AbsMessage;
-import common.FileUitl;
-import common.MyCodecFactory;
+import com.connection.message.AbsMessage;
 
 public class SocketClient extends IoHandlerAdapter {
 	
-	Logger logger = LoggerFactory.getLogger(SocketClient.class);
+	private static Logger logger = Logger.getLogger(SocketClient.class);
 	
 	public static final int CONNECT_TIMEOUT = 3000;
 
 	private String host;
 	private int port;
+	private String mac;
 	private SocketConnector connector;
 	private IoSession session;
 
-	public SocketClient() {
-		//this("111.202.58.60", 33789);
-		this("111.202.58.60", 9172);
-	}
 	
 	public static void main(String[] args) {
-		new SocketClient();
-		new SocketClient();
+		new SocketClient("111.202.58.60", 9172,"ttt001");
 	}
 
-	public SocketClient(String host, int port) {
+	public SocketClient(String host, int port,String mac) {
 		try{
 			this.host = host;
 			this.port = port;
@@ -58,41 +46,45 @@ public class SocketClient extends IoHandlerAdapter {
 							new InfoEncoder(Charset.forName("utf-8")))
 							));
 			connector.setHandler(this);
-			// Á¬½Óµ½ÌØ¶¨µÄremoteµØÖ·£¬InetSocketAddress·â×°IPºÍport,JavaÍøÂç±à³Ì¹æ·¶£¬
-			// ²»Ìá¹©Ö±½ÓµÄipµØÖ·ºÍ¶Ë¿ÚµÄconnect·½·¨
+			// è¿æ¥åˆ°ç‰¹å®šçš„remoteåœ°å€ï¼ŒInetSocketAddresså°è£…IPå’Œport,Javaç½‘ç»œç¼–ç¨‹è§„èŒƒï¼Œ
+			// ä¸æä¾›ç›´æ¥çš„ipåœ°å€å’Œç«¯å£çš„connectæ–¹æ³•
 			ConnectFuture connectFuture = connector.connect(new InetSocketAddress(this.host, this.port));
-			// µÈ´ı½¨Á¢Á¬½Ó
+			// ç­‰å¾…å»ºç«‹è¿æ¥
 			connectFuture.awaitUninterruptibly();
 	
-			// ·µ»Ø´ú±íÁ½¶ËÁ¬½ÓµÄÒ»¸ö¶ÔÏó,ÓĞ¶ÁĞ´·½·¨ÒÔ¼°»ñÈ¡±¾¶ËÍøÂçÉèÖÃµÄÏà¹Ø·½·¨
+			// è¿”å›ä»£è¡¨ä¸¤ç«¯è¿æ¥çš„ä¸€ä¸ªå¯¹è±¡,æœ‰è¯»å†™æ–¹æ³•ä»¥åŠè·å–æœ¬ç«¯ç½‘ç»œè®¾ç½®çš„ç›¸å…³æ–¹æ³•
 			this.session = connectFuture.getSession();
 			
-			if(session!=null&&session.isConnected())
+			if(session==null || !session.isConnected())
 			{
-				System.out.println("Á´½Ó³É¹¦");
+				logger.info("é“¾æ¥ä¸æˆåŠŸ");
 			}
+			logger.info("é“¾æ¥æˆåŠŸ");
 			
-	        Map<String,Object> maps = new HashMap<String, Object>();
-	        maps.put("order", "report_mac");
-	        maps.put("mac", "678yyss");
-			String datas = JSON.toJSONString(maps);
-			IoBuffer buffers = getDatabuffer(datas);
+			Map<String,Object> map = new HashMap<String, Object>();
+	        map.put("order","report_mac");
+	        map.put("mac","mac001");
+			String data = JSON.toJSONString(map);
+			IoBuffer buffer = getDatabuffer(data);
+			System.out.println(buffer);
+			session.write(buffer);
 			
-			session.write(buffers);
-			
-			
-			session.closeOnFlush().awaitUninterruptibly();
-			
-	       /* IoBuffer buffers2 = getDatabuffer(datas);
-	        session.write(buffers2);
-	        
-	        wFuture.awaitUninterruptibly();
-	        if(wFuture.isWritten())
-	        {
-	        	System.out.println("ĞÅÏ¢·¢ËÍ³É¹¦");
-	        	session.closeNow();
-	        	//CloseFuture cFuture = session.getCloseFuture().awaitUninterruptibly();
-	        }*/
+			while(true)
+			{
+				Map<String,Object> ht = new HashMap<String, Object>();
+		        ht.put("order","h_t");
+				String htstr = JSON.toJSONString(ht);
+				IoBuffer htbuffer = getDatabuffer(htstr);
+				if(session.write(htbuffer).awaitUninterruptibly(5*1000))
+				{
+					logger.info("å‘é€å¿ƒè·³åŒ… æ•°æ®æˆåŠŸï¼");
+				}
+				try {
+					Thread.sleep(10*1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 		}finally{
 			if(connector!=null)
 			{
@@ -102,20 +94,19 @@ public class SocketClient extends IoHandlerAdapter {
 	}
 	
 	/**
-	 * ·â×°ÏûÏ¢
+	 * å°è£…æ¶ˆæ¯
 	 * @return
 	 */
 	public IoBuffer getDatabuffer(String data)
 	{
 		AbsMessage msgHeads = new   AbsMessage(data);
-		System.out.println("·¢ÉúÏûÏ¢³¤¶È£º"+(8+msgHeads.getBodyLength()));
-        //´´½¨Ò»¸ö»º³å£¬»º³å´óĞ¡Îª:ÏûÏ¢Í·³¤¶È(8Î»)+ÏûÏ¢Ìå³¤¶È
+        //åˆ›å»ºä¸€ä¸ªç¼“å†²ï¼Œç¼“å†²å¤§å°ä¸º:æ¶ˆæ¯å¤´é•¿åº¦(8ä½)+æ¶ˆæ¯ä½“é•¿åº¦
         IoBuffer buffer = IoBuffer.allocate(8+msgHeads.getBodyLength());
         buffer.put(msgHeads.getStartFlage());
         buffer.putInt(msgHeads.getBodyLength());
         buffer.put(msgHeads.getBodyData());
         buffer.put(msgHeads.getEndFlage());
-        //°ÑÏûÏ¢Ìåput½øÈ¥
+        //æŠŠæ¶ˆæ¯ä½“putè¿›å»
         buffer.flip();
 		return buffer;
 	}
@@ -126,41 +117,35 @@ public class SocketClient extends IoHandlerAdapter {
 		byte StartFlage1 = buf.get();
 		byte StartFlage2 = buf.get();
         int bodyLength=buf.getInt();
-		
-		System.out.println("·şÎñÆ÷´¦Àí½á¹û£º"+(StartFlage1==(byte) 0xaa));  
-        System.out.println("·şÎñÆ÷´¦Àí½á¹û£º"+(StartFlage2==(byte) 0xaa));
-        System.out.println("·şÎñÆ÷´¦ÀíÏûÏ¢Ìå³¤¶È£º"+bodyLength);
     	
         byte[] bytes = new byte[bodyLength];
         
         buf.get(bytes);
-        System.out.println(buf.remaining());
         
         
         String json = new String(bytes,"utf-8");
-        System.out.println("·şÎñÆ÷·µ»Ø£º"+json);
-        //session.closeOnFlush();
+        logger.info("æœåŠ¡å™¨è¿”å›ï¼š"+json);
 	}
 
 	@Override
 	public void sessionCreated(IoSession session) throws Exception {
-		System.out.println("sessionCreated:"+session.getId());
+		logger.info("sessionCreated:"+session.getId());
 	}
 
 	@Override
 	public void sessionOpened(IoSession session) throws Exception {
-		System.out.println("sessionOpened:"+session.getId());
+		logger.info("sessionOpened:"+session.getId());
 	}
 
 	@Override
 	public void sessionClosed(IoSession session) throws Exception {
-		System.out.println("sessionClosed:"+session.getId());
+		logger.info("sessionClosed:"+session.getId());
 	}
 
 	@Override
 	public void sessionIdle(IoSession session, IdleStatus status)
 			throws Exception {
-		System.out.println("¿ÕÏĞ:"+session.getId()+"£¬¿ÕÏĞ´ÎÊı£º"+session.getIdleCount(status));
+		logger.info("ç©ºé—²:"+session.getId()+"ï¼Œç©ºé—²æ¬¡æ•°ï¼š"+session.getIdleCount(status));
 	}
 
 	@Override
@@ -171,6 +156,5 @@ public class SocketClient extends IoHandlerAdapter {
 
 	@Override
 	public void messageSent(IoSession session, Object message) throws Exception {
-		System.out.println("messageSent:"+session.getId());
 	}
 }
