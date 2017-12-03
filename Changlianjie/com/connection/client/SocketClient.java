@@ -12,6 +12,8 @@ import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.filter.executor.ExecutorFilter;
+import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.SocketConnector;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 
@@ -26,23 +28,22 @@ public class SocketClient extends IoHandlerAdapter {
 	private static Logger logger = Logger.getLogger(SocketClient.class);
 	
 	public static final int CONNECT_TIMEOUT = 3000;
-
-	private String host;
-	private int port;
-	private String mac;
 	private SocketConnector connector;
 	private IoSession session;
 
 	
 	public static void main(String[] args) {
-		new SocketClient("127.0.0.1", 8088,"54:13:79:A2:8F:0B");
+		//new SocketClient("111.202.58.60", 9173,"88:88:88:88:88");
+		//new SocketClient("127.0.0.1", 8088,"88:88:88:88:88");
+		new SocketClient("127.0.0.1", 8088,"66:66:66:66:66");
 	}
 
 	public SocketClient(String host, int port,String mac) {
 		try{
-			this.host = host;
-			this.port = port;
 			connector = new NioSocketConnector();
+			
+			connector.getFilterChain().addLast("exceutor", new ExecutorFilter());
+			connector.getFilterChain().addLast( "logger", new LoggingFilter());
 			connector.getFilterChain().addLast("codec", 
 			 		new ProtocolCodecFilter(new MyCodecFactory(
 							new InfoDecoder(Charset.forName("utf-8")),
@@ -51,7 +52,7 @@ public class SocketClient extends IoHandlerAdapter {
 			connector.setHandler(this);
 			// 连接到特定的remote地址，InetSocketAddress封装IP和port,Java网络编程规范，
 			// 不提供直接的ip地址和端口的connect方法
-			ConnectFuture connectFuture = connector.connect(new InetSocketAddress(this.host, this.port));
+			ConnectFuture connectFuture = connector.connect(new InetSocketAddress(host, port));
 			// 等待建立连接
 			connectFuture.awaitUninterruptibly();
 	
@@ -83,7 +84,7 @@ public class SocketClient extends IoHandlerAdapter {
 					logger.info("发送心跳包 数据成功！");
 				}
 				try {
-					Thread.sleep(10*1000);
+					Thread.sleep(5*1000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -117,17 +118,7 @@ public class SocketClient extends IoHandlerAdapter {
 	@Override
 	public void messageReceived(IoSession session, Object message) throws Exception {
 		IoBuffer buf = (IoBuffer) message;
-		byte StartFlage1 = buf.get();
-		byte StartFlage2 = buf.get();
-        int bodyLength=buf.getInt();
-    	
-        byte[] bytes = new byte[bodyLength];
-        
-        buf.get(bytes);
-        
-        
-        String json = new String(bytes,"utf-8");
-        logger.info("服务器返回："+json);
+		ClientHandlerEvent.getInstance().handle(session, buf);
 	}
 
 	@Override
