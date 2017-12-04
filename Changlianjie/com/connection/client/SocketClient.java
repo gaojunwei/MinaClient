@@ -33,9 +33,9 @@ public class SocketClient extends IoHandlerAdapter {
 
 	
 	public static void main(String[] args) {
-		//new SocketClient("111.202.58.60", 9173,"88:88:88:88:88");
+		new SocketClient("111.202.58.60", 9173,"88:88:88:88:88");
 		//new SocketClient("127.0.0.1", 8088,"88:88:88:88:88");
-		new SocketClient("127.0.0.1", 8088,"66:66:66:66:66");
+		//new SocketClient("127.0.0.1", 8088,"66:66:66:66:66");
 	}
 
 	public SocketClient(String host, int port,String mac) {

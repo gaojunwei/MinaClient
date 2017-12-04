@@ -124,7 +124,7 @@ public class ClientHandlerEvent {
             	writeFuture = iosession.write(ioBuffer).awaitUninterruptibly();
             	if(writeFuture.isWritten())
             	{
-            		logger.info("返回“时间同步指令”处理结果："+jsonStr);
+            		logger.info("返回“变价指令”处理结果："+jsonStr);
             	}
                 break;
             case "h_t"://心跳返回
