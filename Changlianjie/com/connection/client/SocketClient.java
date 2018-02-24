@@ -30,15 +30,19 @@ public class SocketClient extends IoHandlerAdapter {
 	public static final int CONNECT_TIMEOUT = 3000;
 	private SocketConnector connector;
 	private IoSession session;
-
+	private String apMac;
+	static boolean flag = true;
 	
 	public static void main(String[] args) {
-		new SocketClient("111.202.58.60", 9173,"88:88:88:88:88");
-		//new SocketClient("127.0.0.1", 8088,"88:88:88:88:88");
-		//new SocketClient("127.0.0.1", 8088,"66:66:66:66:66");
+		new SocketClient("172.25.45.239", 8088,"12:34:56:78:90:94");
+		//new SocketClient("111.202.58.60", 9173,"88:88:88:88:88");
+		//new SocketClient("jdr.jd.com", 8088,"66:66:66:66:66");
+		//String a2=SocketClient.class.getResource("").toString();
+		//System.out.println(a2);
 	}
 
 	public SocketClient(String host, int port,String mac) {
+		apMac = mac;
 		try{
 			connector = new NioSocketConnector();
 			
@@ -75,6 +79,11 @@ public class SocketClient extends IoHandlerAdapter {
 			//每隔10秒发送一次
 			while(true)
 			{
+				if(!SocketClient.flag)
+				{
+					System.out.println("客户端停止！！！");
+					break;
+				}
 				Map<String,Object> ht = new HashMap<String, Object>();
 		        ht.put("order","h_t");
 				String htstr = JSON.toJSONString(ht);
@@ -118,7 +127,7 @@ public class SocketClient extends IoHandlerAdapter {
 	@Override
 	public void messageReceived(IoSession session, Object message) throws Exception {
 		IoBuffer buf = (IoBuffer) message;
-		ClientHandlerEvent.getInstance().handle(session, buf);
+		ClientHandlerEvent.getInstance().handle(session, buf,apMac);
 	}
 
 	@Override
@@ -134,6 +143,7 @@ public class SocketClient extends IoHandlerAdapter {
 	@Override
 	public void sessionClosed(IoSession session) throws Exception {
 		logger.info("sessionClosed:"+session.getId());
+		SocketClient.flag=false;
 	}
 
 	@Override

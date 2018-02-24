@@ -20,14 +20,15 @@ import com.alibaba.fastjson.JSON;
 public class ClientHandlerEvent {
 	private static final Logger logger = LoggerFactory.getLogger(SocketServer.class);
 
-	private static ClientHandlerEvent serverHandlerEvent = new ClientHandlerEvent();;
+	private static ClientHandlerEvent serverHandlerEvent = new ClientHandlerEvent();
+	private static int count = 0;
 	private ClientHandlerEvent(){}
 
 	public static ClientHandlerEvent getInstance() {
 		return serverHandlerEvent;
 	}
 
-	public void handle(IoSession iosession, IoBuffer buf) throws IOException, InterruptedException, UnsupportedEncodingException, SQLException {
+	public void handle(IoSession iosession, IoBuffer buf, String apMac) throws IOException, InterruptedException, UnsupportedEncodingException, SQLException {
 		byte StartFlage1 = buf.get();//获得包头1
 		byte StartFlage2 = buf.get();//获得包头2
 		int bodyLength=buf.getInt();//获得消息体长度
@@ -49,15 +50,45 @@ public class ClientHandlerEvent {
         String jsonStr = null;
         WriteFuture writeFuture = null;
         IoBuffer ioBuffer = null;
+        String msgId = null;
+        
+        //Thread.sleep(5*1000);
+        if(count<3)
+        {
+        	if(order.equals("h_t")){return;}
+        	count++;
+        	msgId = rMap.get("msg_id").toString();
+        	rturnMap.put("order", "report_state");
+        	rturnMap.put("msg_id", "");
+        	rturnMap.put("ap_mac", "88:88:88:88:88");
+        	rturnMap.put("process_order", order);
+        	rturnMap.put("reason", "ap busy");
+        	
+        	jsonStr = JSON.toJSONString(rturnMap);
+        	
+        	ioBuffer = DataUtil.getDatabuffer(jsonStr);
+        	
+        	writeFuture = iosession.write(ioBuffer).awaitUninterruptibly();
+        	if(writeFuture.isWritten())
+        	{
+        		logger.info("返回“设备忙碌返回”处理结果："+jsonStr);
+        	}
+        	return;
+        }
+        
+        if(1==1){return;}
+        
         switch (order) {
             case "call-over"://点名指令
             	operate_id = rMap.get("operate_id").toString();
             	server_time = rMap.get("server_time").toString();
+            	msgId = rMap.get("msg_id").toString();
             	
             	rturnMap.put("order", "call-over");
             	rturnMap.put("operate_id", operate_id);
             	rturnMap.put("server_time", server_time);
-            	rturnMap.put("ap_mac", "22:23:45:11:33:22");//测试需要改动
+            	rturnMap.put("ap_mac", apMac);//测试需要改动
+            	rturnMap.put("msg_id", msgId);
             	
             	list = new ArrayList<>();
             	dataMap = new HashMap<String, String>();
@@ -95,14 +126,37 @@ public class ClientHandlerEvent {
             	}
                 break;
             case "time_sync"://时间同步指令
+            	/*operate_id = rMap.get("operate_id").toString();
+            	server_time = rMap.get("server_time").toString();
+            	msgId = rMap.get("msg_id").toString();
+            	
+            	rturnMap.put("order", "time_sync");
+            	rturnMap.put("msg_id", msgId);
+            	rturnMap.put("ap_mac", apMac);
+            	rturnMap.put("process_order", "time_sync");
+            	rturnMap.put("reason", "ap bussy");
+            	
+            	jsonStr = JSON.toJSONString(rturnMap);
+            	ioBuffer = DataUtil.getDatabuffer(jsonStr);
+            	
+            	writeFuture = iosession.write(ioBuffer).awaitUninterruptibly();
+            	if(writeFuture.isWritten())
+            	{
+            		logger.info("返回“时间同步指令”处理结果："+jsonStr);
+            	}*/
+            	
+            	
+            	
             	operate_id = rMap.get("operate_id").toString();
             	server_time = rMap.get("server_time").toString();
+            	msgId = rMap.get("msg_id").toString();
             	
             	rturnMap.put("order", "time_sync");
             	rturnMap.put("operate_id", operate_id);
             	rturnMap.put("server_time", server_time);
-            	rturnMap.put("ap_mac", "ap:00:00:00:00:01");//测试需要改动
+            	rturnMap.put("ap_mac", apMac);//测试需要改动
             	rturnMap.put("sync_result", true);
+            	rturnMap.put("msg_id", msgId);
             	
             	jsonStr = JSON.toJSONString(rturnMap);
             	ioBuffer = DataUtil.getDatabuffer(jsonStr);
@@ -114,9 +168,12 @@ public class ClientHandlerEvent {
             	}
                 break;
             case "change_img"://变更图片指令
+            	msgId = rMap.get("msg_id").toString();
+            	
             	rturnMap.put("order", "change_img");
-            	rturnMap.put("ap_mac", "ap:00:00:00:00:01");//测试需要改动
+            	rturnMap.put("ap_mac", apMac);//测试需要改动
             	rturnMap.put("sync_result", true);
+            	rturnMap.put("msg_id", msgId);
             	
             	jsonStr = JSON.toJSONString(rturnMap);
             	ioBuffer = DataUtil.getDatabuffer(jsonStr);
